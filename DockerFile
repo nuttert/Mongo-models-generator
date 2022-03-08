@@ -1,0 +1,47 @@
+FROM ubuntu:20.04
+LABEL maintainer="mail@elaborate.pro"
+#Timezone
+ENV TZ=Europe/Moscow
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+#Update
+RUN apt-get update
+#C++ base
+RUN apt-get install -y git cmake libgtest-dev build-essential gcc-10 g++-10 
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10 --slave /usr/bin/gcov gcov /usr/bin/gcov-10 && update-alternatives --config gcc
+#C++ packages
+RUN apt-get install -y nlohmann-json3-dev libboost-all-dev libboost-program-options-dev libgtest-dev libgoogle-glog-dev
+RUN git clone https://github.com/Qihoo360/evpp && \
+    cd evpp && \
+    git submodule update --init --recursive &&\
+    mkdir -p build && cd build
+RUN cd /evpp/build && \
+    cmake .. &&\
+    make -j8 &&\
+    make install
+#Common tools
+RUN apt-get install -y vim netcat
+RUN apt-get -y install gdb gdbserver
+
+RUN apt-get install libpoco-doc libpoco-dev rapidjson-dev -y
+
+RUN apt-get -y install openjdk-8-jdk
+
+RUN apt-get install curl wget libsasl2-dev libsnappy-dev -y
+RUN wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.0/mongo-c-driver-1.21.0.tar.gz && \
+    tar -xzf mongo-c-driver-1.21.0.tar.gz  && \
+    cd mongo-c-driver-1.21.0/build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DBSONCXX_POLY_USE_MNMLSTC=1 -DCMAKE_INSTALL_PREFIX=/usr/local ..                     \
+    -DCMAKE_BUILD_TYPE=Release   \
+    && make install -j$(nproc)
+
+RUN wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.6/mongo-cxx-driver-r3.6.6.tar.gz && \
+    tar -xzf mongo-cxx-driver-r3.6.6.tar.gz && \
+    cd mongo-cxx-driver-r3.6.6/build && \
+    cmake -DBSONCXX_POLY_USE_MNMLSTC=1 -DCMAKE_INSTALL_PREFIX=/usr/local ..                    \
+    && make install
+
+RUN apt install clang-format mongodb libfmt-dev -y
+RUN echo 'PS1="\\t🎅\[\e[33;41m\][\[\e[m\]\[\e[32m\]\u\[\e[m\]\[\e[36m\]@\[\e[m\]\[\e[34m\]\h\[\e[m\]\[\e[33;41m\]]\[\e[m\]🎄 \n \w: "' > ~/.bashrc
+WORKDIR /app
+EXPOSE 2000
+CMD bash

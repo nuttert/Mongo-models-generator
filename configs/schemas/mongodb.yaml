@@ -1,0 +1,44 @@
+openapi: 3.0.1
+info:
+  title: Template config
+  description: Config for mongo db
+  version: 1.0.0
+servers:
+- url: localhost:27017
+paths:
+  /ping:
+    get:
+      responses:
+        200:
+          description: OK
+          content: {}
+components:
+  schemas:
+    DatabaseInfoMongo:
+      type: object
+      required:
+      - host
+      - port
+      - username
+      - password
+      properties:
+        host:
+          type: string
+        port:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+    MongodbConfig:
+      type: object
+      required:
+      - databases
+      - default_db
+      properties:
+        databases:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DatabaseInfoMongo'
+        default_db:
+          type: string

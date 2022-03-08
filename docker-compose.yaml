@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  test:
+    container_name: test
+    build: 
+      context: ./
+      dockerfile: DockerFile
+    volumes: 
+      - ./:/app
+  mongo-master:
+    container_name: mongo-master
+    image: mongo:latest
+    volumes:
+      - ${MONGO_DATA_PATH}/master/data:/data/db
+      - ./databases/mongodb/rs-init.sh:/scripts/rs-init.sh
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
+    ports:
+      - 27017:27017
+    expose:
+      - 27017
+    links:
+      - mongo-slave
+      - mongo-slave-2
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs" ]
+
+  mongo-slave:
+    container_name: mongo-slave
+    image: mongo:latest
+    volumes:
+      - .${MONGO_DATA_PATH}/slave_1/data:/data/db
+    ports:
+      - 27022:27017
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs" ]
+    
+  mongo-slave-2:
+    container_name: mongo-slave-2
+    image: mongo:latest
+    volumes:
+      - .${MONGO_DATA_PATH}/slave_2/data:/data/db
+    ports:
+      - 27023:27017
+    restart: always
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs" ]

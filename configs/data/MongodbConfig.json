@@ -1,0 +1,12 @@
+{
+    "default_db": "main",
+    "databases": {
+        "main": {
+            "type": "srv",
+            "username": "admin",
+            "password": "CAnPXuoIVpHMZpBN",
+            "host": "mongo-slave",
+            "port": 27017
+        }
+    }
+}
