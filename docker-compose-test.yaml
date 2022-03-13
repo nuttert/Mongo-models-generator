@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  test_generator:
+    container_name: test_generator
+    build: 
+      context: ./
+      dockerfile: DockerFile
+    volumes: 
+      - ./:/app
+networks: 
+    external: 
+      name: mongo-network
