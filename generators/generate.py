@@ -9,24 +9,25 @@ GENERATORS = {
     "Configs": {
         "name": "configsGenerator",
         "type": "Configs",
-        "dir": "./configs",
-        "data_dir": "./configs/data",
+        "dir": "/configs",
+        "data_dir": "/configs/data",
     },
     "Models":{
       "name":"modelsGenerator",
       "type": "Models",
-      "dir": "./models",
+      "dir": "/models",
     }
 }
 
 
 def main(argv):
     build_dir = ''
+    current_dir = ''
     update = False
     try:
-        opts, args = getopt.getopt(argv, "s:bd:t", ["build-dir=", "update"])
+        opts, args = getopt.getopt(argv, "s:bd:t:c", ["build-dir=", "update", "current_dir="])
     except getopt.GetoptError:
-        print('generate.p -bd <build dir> -u')
+        print('generate.py -bd <build dir> -u')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
@@ -36,6 +37,8 @@ def main(argv):
             build_dir = arg
         elif opt in ("-u", "--update"):
             update = True
+        elif opt in ("-c", "--current_dir"):
+            current_dir = arg
 
     print("Build directory:", build_dir)
     print("Need to update:", update)
@@ -43,14 +46,14 @@ def main(argv):
     for name, info in GENERATORS.items():
         GENERATOR = info["name"]
         TYPE = info["type"]
-        CONFIGS_FOLDER =info["data_dir"]  if "data_dir" in info else "" 
+        CONFIGS_FOLDER = current_dir + info["data_dir"]  if "data_dir" in info else current_dir
 
         FLAGS = ""
         FLAGS += "-s " if not update else ""
         FLAGS += "--skip-validate-spec " if TYPE == "Configs" else ""
         # FLAGS += " --skip-validate-spec"
 
-        DIR = info["dir"]
+        DIR = current_dir + info["dir"]
         # TEST_INPUT = "https://raw.githubusercontent.com/openapitools/openapi-generator/master/modules/openapi-generator/src/test/resources/2_0/petstore.yaml"
         SCHEMAS_LIST = os.listdir(DIR+"/schemas")
         SCHEMAS_LIST = [schema for schema in SCHEMAS_LIST if Path(
@@ -61,19 +64,19 @@ def main(argv):
         OUT = ":::".join(["{0}/codegen/{1}".format(build_dir, TYPE)
                          for schema in SCHEMAS_LIST])
 
-        IMPL_FOLDER = "../../"+DIR
-        COMPONENTS_FOLDER = "./"
+        IMPL_FOLDER = DIR
+        COMPONENTS_FOLDER = current_dir
 
         print("Schemas folder:", SCHEMAS_LIST)
         print("Output folder:", OUT)
 
         comand = ('export IMPL_FOLDER={4} && export CONFIGS_FOLDER={5} && export COMPONENTS_FOLDER={6} && \
-                  java -cp generators/{0}.jar:generators/engine.jar   \
+                  java -cp {7}/generators/{0}.jar:{7}/generators/engine.jar   \
                   org.openapitools.codegen.OpenAPIGenerator generate \
                   -g {0} \
                   -i {1} \
                   -o {2} \
-                  {3}').format(GENERATOR, SCHEMAS, OUT, FLAGS, IMPL_FOLDER, CONFIGS_FOLDER, COMPONENTS_FOLDER)
+                  {3}').format(GENERATOR, SCHEMAS, OUT, FLAGS, IMPL_FOLDER, CONFIGS_FOLDER, COMPONENTS_FOLDER, current_dir)
 
         print(comand)
         result = os.system(comand)
